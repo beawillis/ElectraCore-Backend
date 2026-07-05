@@ -1,7 +1,7 @@
 const mongoose =
-require("mongoose"); // Import mongoose for MongoDB interactions
+require("mongoose");
 
-// Define the Device schema with fields: deviceId, name, deviceType, transformer, firmwareVersion, status, and lastSeen
+// Represents one ESP32 monitoring node installed on a transformer.
 const deviceSchema =
 new mongoose.Schema(
 {
@@ -56,6 +56,8 @@ enum: [
 default: "offline"
 },
 
+// Updated whenever valid telemetry is ingested; heartbeat jobs use it to detect
+// communication loss.
 lastSeen: {
 type: Date
 }

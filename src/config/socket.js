@@ -7,6 +7,8 @@ require(
 
 let io;
 
+// Socket.IO is attached to the same HTTP server as Express so dashboard clients
+// can receive live telemetry and alert updates from one backend process.
 exports.initialize =
 (server)=>{
 

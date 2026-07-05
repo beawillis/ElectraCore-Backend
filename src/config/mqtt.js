@@ -5,6 +5,8 @@ require(
 
 let client;
 
+// Keep a single MQTT client for subscribers and publishers so protection
+// commands and GSM messages share the same broker connection.
 exports.connect =
 ()=>{
 

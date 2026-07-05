@@ -3,6 +3,8 @@ module.exports =
 history
 )=>{
 
+// Placeholder forecast for UI development. Replace with a trained time-series
+// model after real transformer history is available.
 if(
 !history.length
 ){
@@ -31,7 +33,7 @@ predictedTemperature:
 Number(
 
 (
-latest.temperature
+latest.oilTemperature
 +
 (i*0.5)
 

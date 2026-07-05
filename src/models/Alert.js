@@ -5,6 +5,7 @@ const alertSchema =
 new mongoose.Schema(
 {
 
+// Alerts capture protection-relevant events and their operator lifecycle.
 transformer:{
 type:
 mongoose.Schema.Types.ObjectId,

@@ -1,7 +1,8 @@
-const jwt = require("jsonwebtoken"); // Import jsonwebtoken for JWT operations
+const jwt = require("jsonwebtoken");
 
-// Function to generate a JWT token for a given user
 const generateToken = (user) => {
+  // Keep the token payload small; controllers can load full user data when
+  // they need profile fields.
   return jwt.sign(
     {
       id: user._id,

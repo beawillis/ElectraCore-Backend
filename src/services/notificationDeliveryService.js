@@ -8,6 +8,11 @@ require(
 "../models/Notification"
 );
 
+const mqtt =
+require(
+"./mqttService"
+);
+
 const transporter =
 nodemailer.createTransport({
 
@@ -38,6 +43,7 @@ notification
 
 try{
 
+// Email is delivered directly from the backend using SMTP credentials.
 if(
 notification.channel
 ===
@@ -60,6 +66,32 @@ text:
 notification.message
 
 });
+
+}
+
+if(
+notification.channel
+===
+"sms"
+){
+
+// SMS is queued through MQTT so an ESP32/SIM800L gateway can send the text.
+mqtt.publish(
+
+"gsm/alerts",
+
+{
+title:
+notification.title,
+
+message:
+notification.message,
+
+to:
+process.env.ADMIN_PHONE
+}
+
+);
 
 }
 

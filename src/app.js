@@ -38,7 +38,7 @@ require("./routes/alertRoutes");
 
 const errorHandler =
 require(
-"./middleware/errorMiddleware"
+"./middleware/errorHandler"
 );
 
 const app =

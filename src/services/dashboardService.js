@@ -5,7 +5,10 @@ const Transformer =
 require("../models/Transformer"); // Import the Transformer model for database interactions
 
 const Sensor =
-require("../models/SensorData"); // Import the Sensor model for database interactions
+require("../models/sensorData"); // Import the Sensor model for database interactions
+
+const mongoose =
+require("mongoose");
 
 // Get overall system statistics including total devices, transformers, and sensor readings
 exports.getStats =
@@ -171,12 +174,137 @@ time:
 r.recordedAt,
 
 temperature:
-r.temperature,
+r.oilTemperature,
 
 health:
 r.healthScore
 
 })
 );
+
+};
+
+exports.getSensorAverages =
+async (period="hour")=>{
+
+// Aggregates chart-friendly telemetry by hour or day. Digital oil level is
+// counted as low-oil events rather than averaged like an analog sensor.
+const dateFormat =
+period==="day"
+?
+"%Y-%m-%d"
+:
+"%Y-%m-%d %H:00";
+
+return await Sensor.aggregate([
+{
+$group:{
+_id:{
+$dateToString:{
+format:dateFormat,
+date:"$recordedAt"
+}
+},
+avgOilTemperature:{
+$avg:"$oilTemperature"
+},
+avgAmbientTemperature:{
+$avg:"$ambientTemperature"
+},
+avgVoltage:{
+$avg:"$voltage"
+},
+avgCurrent:{
+$avg:"$current"
+},
+avgHumidity:{
+$avg:"$humidity"
+},
+lowOilEvents:{
+$sum:{
+$cond:[
+{
+$eq:[
+"$oilLevel",
+"low"
+]
+},
+1,
+0
+]
+}
+},
+avgHealthScore:{
+$avg:"$healthScore"
+},
+count:{
+$sum:1
+}
+}
+},
+{
+$sort:{
+_id:1
+}
+},
+{
+$limit:100
+}
+]);
+
+};
+
+exports.getTransformerAnalytics =
+async (transformerId)=>{
+
+// Per-transformer summary used for detail pages and maintenance review.
+return await Sensor.aggregate([
+{
+$match:{
+transformer:
+new mongoose.Types.ObjectId(transformerId)
+}
+},
+{
+$group:{
+_id:"$transformer",
+avgOilTemperature:{
+$avg:"$oilTemperature"
+},
+maxOilTemperature:{
+$max:"$oilTemperature"
+},
+minVoltage:{
+$min:"$voltage"
+},
+maxVoltage:{
+$max:"$voltage"
+},
+avgCurrent:{
+$avg:"$current"
+},
+lowOilEvents:{
+$sum:{
+$cond:[
+{
+$eq:[
+"$oilLevel",
+"low"
+]
+},
+1,
+0
+]
+}
+},
+avgHealthScore:{
+$avg:"$healthScore"
+},
+readings:{
+$sum:1
+}
+}
+}
+]);
 
 };

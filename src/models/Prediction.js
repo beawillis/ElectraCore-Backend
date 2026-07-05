@@ -4,6 +4,8 @@ require("mongoose");
 const schema =
 new mongoose.Schema({
 
+// Stores both current baseline-rule predictions and future trained-model
+// outputs so the dashboard history does not need to change later.
 transformer:{
 type:
 mongoose.Schema.Types.ObjectId,

@@ -16,6 +16,7 @@ payload
 
 try{
 
+// MQTT messages are expected to use the same JSON body as the HTTP ingest API.
 const data =
 JSON.parse(
 payload
@@ -28,6 +29,7 @@ await sensorService
 data
 );
 
+// Keep dashboards live without requiring polling after every sensor packet.
 socket.broadcast(
 
 "transformer:update",

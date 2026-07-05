@@ -18,6 +18,8 @@ exports.start =
 const client =
 connect();
 
+// ESP32 nodes publish telemetry by transformer topic, but the payload still
+// contains the database ids needed for storage and dashboard relationships.
 client.subscribe(
 "transformers/+/sensor"
 );

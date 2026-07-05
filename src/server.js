@@ -33,6 +33,8 @@ require(
 require("dotenv")
 .config();
 
+// Boot order matters: connect storage, create HTTP/socket servers, then start
+// MQTT and scheduled jobs that depend on the app services.
 connectDB();
 
 const server =
@@ -57,6 +59,7 @@ console.log(
 "Client connected"
 );
 
+// Socket modules register event listeners for each dashboard concern.
 require(
 "./sockets/sensorSocket"
 )(

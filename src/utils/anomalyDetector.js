@@ -3,6 +3,8 @@ module.exports =
 features
 )=>{
 
+// Lightweight anomaly labels for current dashboards; trained anomaly detection
+// can replace this once enough clean history exists.
 const anomalies=[];
 
 if(
@@ -36,7 +38,7 @@ anomalies.push(
 }
 
 if(
-features.avgOil<20
+features.lowOilDetected
 ){
 
 anomalies.push(

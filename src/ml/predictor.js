@@ -3,6 +3,8 @@ exports.predict =
 features
 )=>{
 
+// Placeholder predictor: deterministic scoring that mirrors known electrical
+// risks while the project collects enough data for a trained anomaly model.
 let risk=0;
 
 if(
@@ -21,7 +23,7 @@ features.avgVoltage>250
 risk+=20;
 
 if(
-features.avgOil<25
+features.lowOilDetected
 )
 risk+=25;
 
@@ -38,7 +40,19 @@ risk>40
 ?
 "warning"
 :
-"healthy"
+"healthy",
+
+modelType:
+"baseline_rules",
+
+mlEnabled:
+false,
+
+confidence:
+null,
+
+message:
+"Prediction is currently based on rule-based risk scoring until enough sensor history is collected for ML training."
 
 };
 

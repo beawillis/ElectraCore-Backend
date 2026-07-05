@@ -1,6 +1,5 @@
-const jwt = require("jsonwebtoken"); // Import jsonwebtoken for JWT operations
+const jwt = require("jsonwebtoken");
 
-// Middleware function to authenticate requests using JWT tokens
 const authMiddleware = (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
@@ -9,6 +8,8 @@ const authMiddleware = (req, res, next) => {
   }
 
   try {
+    // Route authorization depends on the id and normalized role embedded in
+    // the token at login/register time.
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded; 
     next();

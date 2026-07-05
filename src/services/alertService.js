@@ -17,6 +17,8 @@ await Alert
 payload
 );
 
+// Every alert becomes an in-app/system notification; high-risk alerts also
+// queue external delivery channels.
 await Notification
 .send({
 
@@ -27,9 +29,50 @@ message:
 payload.message,
 
 alert:
-alert._id
+alert._id,
+
+channel:
+"system"
 
 });
+
+if(
+["high","critical"].includes(payload.severity)
+){
+
+await Notification.send({
+
+title:
+payload.type,
+
+message:
+payload.message,
+
+alert:
+alert._id,
+
+channel:
+"email"
+
+});
+
+await Notification.send({
+
+title:
+payload.type,
+
+message:
+payload.message,
+
+alert:
+alert._id,
+
+channel:
+"sms"
+
+});
+
+}
 
 return alert;
 

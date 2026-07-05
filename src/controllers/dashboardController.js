@@ -152,3 +152,63 @@ next(err);
 }
 
 };
+
+exports.getSensorAverages =
+async (
+req,
+res,
+next
+)=>{
+
+try{
+
+res.json({
+
+success:true,
+
+data:
+await service.getSensorAverages(
+req.query.period
+)
+
+});
+
+}
+
+catch(err){
+
+next(err);
+
+}
+
+};
+
+exports.getTransformerAnalytics =
+async (
+req,
+res,
+next
+)=>{
+
+try{
+
+res.json({
+
+success:true,
+
+data:
+await service.getTransformerAnalytics(
+req.params.id
+)
+
+});
+
+}
+
+catch(err){
+
+next(err);
+
+}
+
+};

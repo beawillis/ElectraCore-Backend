@@ -1,6 +1,6 @@
-const mongoose = require("mongoose"); // Import mongoose for MongoDB interactions
+const mongoose = require("mongoose");
 
-// Define the Transformer schema with fields: transformerId, name, location, capacity, status, and installationDate
+// Asset-level state for a monitored distribution transformer.
 const transformerSchema =
 new mongoose.Schema( 
 {
@@ -35,6 +35,13 @@ new mongoose.Schema(
     ],
 
     default: "healthy"
+  },
+
+  healthScore: {
+    type: Number,
+    min: 0,
+    max: 100,
+    default: 100
   },
 
   installationDate: {

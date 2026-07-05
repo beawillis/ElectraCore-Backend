@@ -46,5 +46,15 @@ router.get(
 controller.getTrends
 );
 
+router.get(
+"/analytics/sensor-averages",
+controller.getSensorAverages
+);
+
+router.get(
+"/analytics/transformer/:id",
+controller.getTransformerAnalytics
+);
+
 module.exports =
 router;

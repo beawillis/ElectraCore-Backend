@@ -1,7 +1,8 @@
 const mongoose =
-require("mongoose"); // Import mongoose for MongoDB interactions
+require("mongoose");
 
-// Define SensorData schema
+// One telemetry sample from an ESP32 device. oilLevel is digital because the
+// hardware uses a float switch, not an analog level sensor.
 const sensorSchema =
 new mongoose.Schema(
 {
@@ -28,7 +29,11 @@ ref:
 required:true
 },
 
-temperature:{
+oilTemperature:{
+type:Number
+},
+
+ambientTemperature:{
 type:Number
 },
 
@@ -45,7 +50,11 @@ type:Number
 },
 
 oilLevel:{
-type:Number
+type:String,
+enum:[
+"high",
+"low"
+]
 },
 
 healthScore:{

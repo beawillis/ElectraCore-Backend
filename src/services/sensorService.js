@@ -1,6 +1,11 @@
 const Sensor =
 require(
-"../models/SensorData"
+"../models/sensorData"
+);
+
+const Device =
+require(
+"../models/Device"
 );
 
 const calculateHealth =
@@ -18,43 +23,59 @@ require(
 "./alertService"
 );
 
-/*
-Ingest sensor data
-Calculate health
-Store reading
-Generate alerts
-*/
+const validator =
+require(
+"../validators/sensorValidator"
+);
+
+const mqttPublisher =
+require(
+"../mqtt/mqttPublisher"
+);
 
 exports.ingest =
 async (
 payload
 )=>{
 
-// Calculate health score
+// Every ingestion path, MQTT or HTTP, passes through the same validation and
+// protection pipeline so stored readings and alerts behave consistently.
+payload =
+validator.validateAndNormalize(
+payload
+);
+
 payload.healthScore =
 calculateHealth(
 payload
 );
 
-// Save reading
+// A valid reading is treated as the device heartbeat.
+await Device.findByIdAndUpdate(
+payload.device,
+{
+status:"connected",
+lastSeen:new Date()
+}
+);
+
 const saved =
 await Sensor
 .create(
 payload
 );
 
-// Evaluate alert rules
 const alerts =
 rules(
 payload
 );
 
-// Generate alerts
 for(
 const alert
 of alerts
 ){
 
+const created =
 await alertService
 .create({
 
@@ -74,6 +95,23 @@ severity:
 alert.severity
 
 });
+
+if(
+alert.severity==="critical"
+){
+
+// Relay isolation remains rule-based for safety; ML should only advise until
+// it is trained and validated with real transformer history.
+mqttPublisher.publishProtectionCommand(
+payload.device,
+{
+action:"ISOLATE_RELAY",
+reason:alert.type,
+alert:created._id
+}
+);
+
+}
 
 }
 

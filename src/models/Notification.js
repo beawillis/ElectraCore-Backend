@@ -4,6 +4,8 @@ require("mongoose");
 const schema =
 new mongoose.Schema({
 
+// Notifications are queued records. Delivery jobs mark them delivered after
+// email, SMS gateway, or in-app handling succeeds.
 title:String,
 
 message:String,

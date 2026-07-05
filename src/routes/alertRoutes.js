@@ -19,6 +19,8 @@ require(
 
 router.use(auth);
 
+// All authenticated users can view alerts; only operational roles can change
+// the alert lifecycle.
 router.get(
 "/",
 controller.getAlerts

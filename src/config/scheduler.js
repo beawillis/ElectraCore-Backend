@@ -6,6 +6,8 @@ require(
 exports.start =
 ()=>{
 
+// Jobs are intentionally centralized here so maintenance intervals are visible
+// in one place as the system grows.
 cron.schedule(
 
 "*/1 * * * *",
@@ -41,7 +43,7 @@ cron.schedule(
 "0 0 * * *",
 
 require(
-"../jobs/alertCleanupJob"
+"../jobs/alertCleanupjob"
 )
 
 );

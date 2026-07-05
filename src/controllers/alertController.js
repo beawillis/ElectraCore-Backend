@@ -12,6 +12,8 @@ next
 
 try{
 
+// Controllers keep HTTP response shape consistent while services own database
+// and notification side effects.
 res.json({
 
 success:true,

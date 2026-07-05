@@ -1,15 +1,17 @@
 module.exports =
 ({
-temperature,
+oilTemperature,
 voltage,
 current,
 oilLevel
 })=>{
 
+// Health is a simple protective score, not an ML result. It should stay easy
+// to audit because operators may rely on it during faults.
 let score=100;
 
 if(
-temperature>80
+oilTemperature>80
 )
 score-=25; 
 
@@ -24,7 +26,7 @@ current>100
 score-=20; 
 
 if(
-oilLevel<20
+oilLevel==="low"
 )
 score-=35;
 

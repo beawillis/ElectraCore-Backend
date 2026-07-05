@@ -1,6 +1,6 @@
 const Sensor =
 require(
-"../models/SensorData"
+"../models/sensorData"
 );
 
 const Transformer =
@@ -11,6 +11,8 @@ require(
 module.exports =
 async ()=>{
 
+// Roll up stored readings into transformer-level health for dashboard lists.
+// This is intentionally separate from per-reading health calculation.
 const sensors =
 await Sensor
 .find();

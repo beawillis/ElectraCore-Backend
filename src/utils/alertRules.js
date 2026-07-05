@@ -3,8 +3,10 @@ module.exports =
 
 const alerts=[];
 
+// These thresholds are the deterministic protection layer. They should remain
+// active even after ML is added, because they protect against immediate danger.
 if(
-data.temperature>80
+data.oilTemperature>80
 ){
 
 alerts.push({
@@ -17,6 +19,30 @@ severity:
 
 message:
 "Transformer temperature exceeded threshold"
+
+});
+
+}
+
+if(
+data.oilTemperature === undefined ||
+data.voltage === undefined ||
+data.current === undefined ||
+data.oilLevel === undefined
+){
+
+// Missing required readings are treated as a sensor fault instead of silently
+// accepting incomplete telemetry.
+alerts.push({
+
+type:
+"SENSOR_FAILURE",
+
+severity:
+"high",
+
+message:
+"Required sensor reading is missing"
 
 });
 
@@ -42,6 +68,25 @@ message:
 }
 
 if(
+data.voltage<180
+){
+
+alerts.push({
+
+type:
+"UNDERVOLTAGE",
+
+severity:
+"high",
+
+message:
+"Voltage below safe threshold"
+
+});
+
+}
+
+if(
 data.current>100
 ){
 
@@ -61,7 +106,7 @@ message:
 }
 
 if(
-data.oilLevel<20
+data.oilLevel==="low"
 ){
 
 alerts.push({

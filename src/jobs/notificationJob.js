@@ -11,6 +11,7 @@ require(
 module.exports =
 async ()=>{
 
+// Delivery is retried by leaving failed notifications marked as undelivered.
 const pending =
 
 await Notification

@@ -1,26 +1,24 @@
-// Import the necessary modules and middleware for device routes
 const router =
 require("express")
-.Router(); // Create a new router instance for device routes
+.Router();
 
 const auth =
 require(
 "../middleware/authMiddleware"
 );
 
-// Import the role middleware to restrict access to certain routes based on user roles
 const roles =
 require(
 "../middleware/roleMiddleware"
 );
 
-// Import the device controller to handle the logic for device-related routes
 const controller =
 require(
 "../controllers/deviceController"
 );
 
-
+// Device registration changes the hardware inventory, so only admins can add
+// ESP32 units and bind them to transformers.
 router.post(
 "/register",
 auth,
@@ -40,6 +38,8 @@ auth,
 controller.getDevice
 );
 
+// Engineers can update operational metadata such as firmware/status, while
+// destructive device removal stays admin-only.
 router.put(
 "/:id",
 auth,
@@ -56,3 +56,6 @@ auth,
 roles("admin"),
 controller.deleteDevice
 );
+
+module.exports =
+router;
