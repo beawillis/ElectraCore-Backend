@@ -75,6 +75,7 @@ Critical alerts can publish a protection command to the device relay topic.
 - Socket.IO
 - JWT
 - Nodemailer
+- Resend
 - node-cron
 - Python placeholders for future ML training/inference
 
@@ -150,15 +151,24 @@ MQTT_URL=mqtt://localhost:1883
 JWT_SECRET=replace-with-a-secure-secret
 JWT_EXPIRES_IN=7d
 
+# Preferred email provider for alert delivery
+RESEND_API_KEY=re_xxxxxxxxx
+RESEND_FROM_EMAIL=ElectraCore <alerts@yourdomain.com>
+ADMIN_EMAIL=operator@example.com
+
+# Optional SMTP fallback if Resend is not configured
 EMAIL_HOST=smtp.example.com
 EMAIL_PORT=587
 EMAIL_USER=alerts@example.com
 EMAIL_PASS=replace-with-email-password
-ADMIN_EMAIL=operator@example.com
+
 ADMIN_PHONE=+000000000000
 ```
 
 `MONGODB_URI` is also supported as an alternative to `MONGO_URI`.
+
+For Resend email delivery, create an API key and use a verified sender/domain.
+If `RESEND_API_KEY` is missing, the backend falls back to SMTP settings.
 
 ### Run The Backend
 
