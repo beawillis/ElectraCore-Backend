@@ -1,0 +1,33 @@
+{
+  "name": "electracore-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "helmet": "^8.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.2.0",
+    "mongoose": "^9.6.3",
+    "morgan": "^1.11.0",
+    "mqtt": "^5.15.1",
+    "node-cron": "^4.5.0",
+    "nodemailer": "^9.0.1",
+    "socket.io": "^4.8.3"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
