@@ -10,9 +10,13 @@ require("../models/sensorData"); // Import the Sensor model for database interac
 const mongoose =
 require("mongoose");
 
+const { buildDashboardScopeQueries } = require("../utils/dashboardScope");
+
 // Get overall system statistics including total devices, transformers, and sensor readings
 exports.getStats =
-async ()=>{
+async (filters = {}) => {
+
+const { transformerQuery, deviceQuery, sensorQuery } = buildDashboardScopeQueries(filters);
 
 const [
 devices,
@@ -20,11 +24,11 @@ transformers,
 readings
 ]=await Promise.all([
 
-Device.countDocuments(),
+Device.countDocuments(deviceQuery),
 
-Transformer.countDocuments(),
+Transformer.countDocuments(transformerQuery),
 
-Sensor.countDocuments()
+Sensor.countDocuments(sensorQuery)
 
 ]);
 
@@ -35,7 +39,12 @@ devices,
 transformers,
 
 sensorReadings:
-readings
+readings,
+
+scope: {
+  transformerId: filters.transformerId || null,
+  deviceId: filters.deviceId || null
+}
 
 };
 

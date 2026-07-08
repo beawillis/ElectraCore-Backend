@@ -20,6 +20,13 @@ require(
 // Transformer records are asset inventory. Admins create/delete them; engineers
 // can update operational details after commissioning.
 router.post(
+"/register",
+auth,
+roles("admin"),
+controller.createTransformer
+);
+
+router.post(
 "/",
 auth,
 roles("admin"),

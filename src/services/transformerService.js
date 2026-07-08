@@ -11,9 +11,17 @@ return await Transformer.create(data);
 
 // get all transformers
 exports.getAll =
-async () => {
+async ({ filters = {}, skip = 0, limit = 10, sort = { createdAt: -1 } } = {}) => {
 
-return await Transformer.find();
+const [items, total] = await Promise.all([
+  Transformer.find(filters)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit),
+  Transformer.countDocuments(filters)
+]);
+
+return { items, total, page: Math.floor(skip / limit) + 1, limit };
 
 };
 

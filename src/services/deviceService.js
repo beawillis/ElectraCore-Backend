@@ -13,13 +13,18 @@ data
 
 // get all devices
 exports.getAll =
-async ()=>{
+async ({ filters = {}, skip = 0, limit = 10, sort = { createdAt: -1 } } = {})=>{
 
-return await Device
-.find()
-.populate(
-"transformer"
-);
+const [items, total] = await Promise.all([
+  Device.find(filters)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .populate("transformer"),
+  Device.countDocuments(filters)
+]);
+
+return { items, total, page: Math.floor(skip / limit) + 1, limit };
 
 };
 

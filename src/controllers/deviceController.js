@@ -2,6 +2,8 @@ const service =
 require(
 "../services/deviceService" // Import the device service to handle business logic for device operations
 );
+const { validateDeviceInput } = require("../validators/requestValidator");
+const { parseQuery } = require("../utils/queryParser");
 
 // create a new device
 exports.registerDevice =
@@ -13,6 +15,11 @@ next
 
 try{
 
+const validation = validateDeviceInput(req.body);
+if (!validation.isValid) {
+  return res.status(400).json({ success: false, message: "Validation failed", errors: validation.errors });
+}
+
 const data =
 await service.create(
 req.body
@@ -22,6 +29,7 @@ res
 .status(201)
 .json({
 success:true,
+message:"Device registered successfully",
 data
 });
 
@@ -44,13 +52,17 @@ next
 
 try{
 
+const query = parseQuery(req.query);
 const data =
-await service.getAll();
+await service.getAll(query);
 
 res.json({
 success:true,
-count:data.length,
-data
+count:data.items.length,
+page:data.page,
+limit:data.limit,
+total:data.total,
+data:data.items
 });
 
 }

@@ -1,109 +1,41 @@
 # ElectraCore Backend
 
-AI-powered smart transformer monitoring and protection backend for real-time
-IoT telemetry ingestion, transformer health assessment, alerting, notification
-delivery, and dashboard/mobile API support.
+ElectraCore Backend is a production-style Node.js and Express API for smart transformer monitoring. It ingests telemetry from ESP32-based devices, evaluates transformer health, generates alerts, exposes dashboard analytics, and supports authenticated admin/operator/engineer workflows.
 
-ElectraCore is designed for low-cost distribution transformer monitoring using
-ESP32-based edge devices. The backend receives sensor data over MQTT or REST,
-validates and stores readings, calculates transformer health, detects unsafe
-conditions, broadcasts live updates, and exposes secure APIs for supervision
-applications.
+## What the backend does
 
-## Project Status
+- Receives sensor data over MQTT and REST
+- Stores and queries transformers, devices, telemetry, alerts, and notifications
+- Calculates health scores and protection rules
+- Supports JWT-based authentication and role-based authorization
+- Provides dashboard analytics and scoped stats for transformers/devices
+- Includes Swagger docs, validation, logging, rate limiting, Docker support, and CI/CD workflows
 
-The backend currently provides a production-style monitoring and protection
-foundation with a placeholder ML layer.
+## Current capabilities
 
-- Rule-based protection is active.
-- Health scoring and alerts are implemented.
-- MQTT, REST, Socket.IO, MongoDB, JWT auth, notifications, and schedulers are wired.
-- ML endpoints are available, but currently return baseline rule-based risk
-  results until enough real sensor history is collected for training.
+- Real-time transformer monitoring
+- Rule-based anomaly detection and alerting
+- Notification delivery with email templates
+- Socket.IO live updates
+- Dashboard analytics and trends
+- Pagination, search, filtering, and query-based list endpoints
+- Dockerized deployment and GitHub Actions pipelines
 
-## Core Capabilities
-
-- Real-time transformer sensor ingestion over MQTT and HTTP
-- MongoDB persistence for devices, transformers, readings, alerts, predictions,
-  and notifications
-- JWT authentication and role-based authorization
-- Transformer health scoring
-- Rule-based fault detection and protection triggers
-- Alert lifecycle management: active, acknowledged, resolved
-- Email and MQTT/SMS-style notification queueing
-- Socket.IO live dashboard updates
-- Dashboard analytics and trend endpoints
-- ML placeholder endpoints for future trained anomaly detection
-
-## Monitored Parameters
-
-The system currently supports these transformer and environment readings:
-
-- Oil temperature
-- Load current
-- AC voltage
-- Oil level from a digital float switch
-- Ambient temperature
-- Relative humidity
-
-Oil level is stored as a digital state:
-
-- `1`, `true`, `"HIGH"` -> `"high"`
-- `0`, `false`, `"LOW"` -> `"low"`
-
-## Faults Detected
-
-The current protection layer detects:
-
-- Overheating
-- Overloading
-- Overvoltage
-- Undervoltage
-- Low transformer oil
-- Missing sensor readings
-- Communication loss
-
-Critical alerts can publish a protection command to the device relay topic.
-
-## Technology Stack
+## Technology stack
 
 - Node.js
 - Express.js
-- MongoDB
-- Mongoose
+- MongoDB + Mongoose
 - MQTT
 - Socket.IO
 - JWT
-- Nodemailer
-- Resend
-- node-cron
-- Python placeholders for future ML training/inference
+- Winston + Morgan
+- Zod + Joi
+- Swagger OpenAPI
+- Docker + Docker Compose
+- GitHub Actions
 
-## Architecture
-
-```text
-ESP32 / edge device
-    |
-    | MQTT: transformers/:id/sensor
-    | HTTP: /api/sensors/ingest
-    v
-Sensor ingestion service
-    |
-    | validate + normalize payload
-    | calculate health score
-    | persist reading
-    | evaluate protection rules
-    v
-MongoDB + Alert/Notification services
-    |
-    | Socket.IO updates
-    | Email/SMS queue
-    | Relay protection MQTT commands
-    v
-Web dashboard / mobile app / operator tools
-```
-
-## Project Structure
+## Project structure
 
 ```text
 src/
@@ -112,34 +44,34 @@ src/
   config/                   Database, MQTT, Socket.IO, scheduler config
   controllers/              HTTP request handlers
   jobs/                     Scheduled background jobs
-  middleware/               Auth, roles, and error handling
+  middleware/               Auth, roles, rate limiting, error handling
   ml/                       Baseline predictor and future ML placeholders
   models/                   Mongoose schemas
   mqtt/                     MQTT subscriber, publisher, and topic handling
   routes/                   REST API route definitions
   services/                 Business logic
-  sockets/                  Socket.IO room/event handlers
-  utils/                    Health, alert, feature, anomaly, forecast helpers
-  validators/               Sensor payload validation and normalization
+  sockets/                  Socket.IO event handlers
+  utils/                    Health, alert, query, email, logging helpers
+  validators/               Request validation and schemas
+  tests/                    Test suite (legacy layout remains under test/)
 test/                       Node.js test suite
 ```
 
-## Getting Started
+## Prerequisites
 
-### Prerequisites
-
-- Node.js
+- Node.js 20+
 - MongoDB instance
 - MQTT broker
+- Docker Desktop (optional, for container builds)
 - npm
 
-### Installation
+## Installation
 
 ```bash
 npm install
 ```
 
-### Environment Variables
+## Environment variables
 
 Create a `.env` file in the project root.
 
@@ -151,26 +83,25 @@ MQTT_URL=mqtt://localhost:1883
 JWT_SECRET=replace-with-a-secure-secret
 JWT_EXPIRES_IN=7d
 
-# Preferred email provider for alert delivery
-RESEND_API_KEY=re_xxxxxxxxx
+FRONTEND_URL=http://localhost:3000
+API_URL=http://localhost:5000
+
+RESEND_API_KEY=
 RESEND_FROM_EMAIL=ElectraCore <alerts@yourdomain.com>
 ADMIN_EMAIL=operator@example.com
 
-# Optional SMTP fallback if Resend is not configured
-EMAIL_HOST=smtp.example.com
+EMAIL_HOST=
 EMAIL_PORT=587
-EMAIL_USER=alerts@example.com
-EMAIL_PASS=replace-with-email-password
+EMAIL_USER=
+EMAIL_PASS=
 
 ADMIN_PHONE=+000000000000
+NODE_ENV=development
 ```
 
 `MONGODB_URI` is also supported as an alternative to `MONGO_URI`.
 
-For Resend email delivery, create an API key and use a verified sender/domain.
-If `RESEND_API_KEY` is missing, the backend falls back to SMTP settings.
-
-### Run The Backend
+## Run locally
 
 Development:
 
@@ -190,13 +121,41 @@ Run tests:
 npm test
 ```
 
-On Windows PowerShell, if script execution blocks `npm`, use:
+## Docker
+
+Build the image:
 
 ```bash
-npm.cmd test
+docker build -t electracore-backend .
 ```
 
-## Authentication And Roles
+Run the container:
+
+```bash
+docker run -p 5000:5000 --env-file .env electracore-backend
+```
+
+Run with Docker Compose:
+
+```bash
+docker compose up --build
+```
+
+Stop the stack:
+
+```bash
+docker compose down
+```
+
+## Swagger docs
+
+Once the server is running, visit:
+
+```text
+http://localhost:5000/api-docs
+```
+
+## Authentication and roles
 
 The backend uses JWT authentication. Roles are normalized to lowercase:
 
@@ -210,13 +169,16 @@ Protected endpoints require:
 Authorization: Bearer <token>
 ```
 
-## REST API Overview
+## API overview
 
 ### Authentication
 
 ```http
 POST /api/auth/register
 POST /api/auth/login
+POST /api/auth/forgot-password
+POST /api/auth/reset-password
+GET  /api/auth/google
 ```
 
 ### Devices
@@ -232,6 +194,7 @@ DELETE /api/devices/:id
 ### Transformers
 
 ```http
+POST   /api/transformers/register
 POST   /api/transformers
 GET    /api/transformers
 GET    /api/transformers/:id
@@ -258,6 +221,48 @@ GET /api/dashboard/trends
 GET /api/dashboard/analytics/sensor-averages
 GET /api/dashboard/analytics/transformer/:id
 ```
+
+## Query support for list endpoints
+
+The list APIs support:
+
+- `page`
+- `limit`
+- `search`
+- `sortBy`
+- `sortOrder`
+- `status`
+- `role`
+- `transformer`
+- `device`
+- `healthLevel`
+- `startDate`
+- `endDate`
+
+Example:
+
+```http
+GET /api/transformers?page=1&limit=10&search=feeder&status=healthy
+```
+
+## CI/CD
+
+GitHub Actions workflows are included:
+
+- [.github/workflows/ci.yml](.github/workflows/ci.yml)
+- [.github/workflows/cd.yml](.github/workflows/cd.yml)
+
+For the CD workflow, add these repository secrets in GitHub:
+
+- `DOCKER_USERNAME`
+- `DOCKER_PASSWORD`
+
+## Notes
+
+- The project includes basic rate limiting and request-size limits.
+- Logs are written to the `logs/` directory and to the console.
+- The backend is ready for deployment on platforms such as Railway, Render, or a VPS.
+
 
 ### Alerts
 

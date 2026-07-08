@@ -2,6 +2,8 @@ const service =
 require(
 "../services/transformerService" // Import the transformer service to handle business logic for transformer operations
 );
+const { validateTransformerInput } = require("../validators/requestValidator");
+const { parseQuery } = require("../utils/queryParser");
 
 // create a new transformer
 exports.createTransformer =
@@ -13,6 +15,11 @@ next
 
 try{
 
+const validation = validateTransformerInput(req.body);
+if (!validation.isValid) {
+  return res.status(400).json({ success: false, message: "Validation failed", errors: validation.errors });
+}
+
 const data =
 await service.create(
 req.body
@@ -21,6 +28,7 @@ req.body
 res.status(201)
 .json({
 success:true,
+message:"Transformer created successfully",
 data
 });
 
@@ -43,13 +51,17 @@ next
 
 try{
 
+const query = parseQuery(req.query);
 const data =
-await service.getAll();
+await service.getAll(query);
 
 res.json({
 success:true,
-count:data.length,
-data
+count:data.items.length,
+page:data.page,
+limit:data.limit,
+total:data.total,
+data:data.items
 });
 
 }

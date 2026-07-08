@@ -10,6 +10,9 @@ require(
 "resend"
 );
 
+const { alertTemplate } = require("../utils/emailTemplates");
+const logger = require("../utils/logger");
+
 const Notification =
 require(
 "../models/Notification"
@@ -67,6 +70,8 @@ process.env.EMAIL_FROM
 ||
 process.env.EMAIL_USER;
 
+const template = alertTemplate(notification.title, notification.message);
+
 if(
 resend
 ){
@@ -83,13 +88,13 @@ to
 ],
 
 subject:
-notification.title,
+template.subject,
 
 text:
-notification.message,
+template.text,
 
 html:
-`<strong>${notification.title}</strong><p>${notification.message}</p>`
+template.html
 
 });
 
@@ -117,10 +122,13 @@ from,
 to,
 
 subject:
-notification.title,
+template.subject,
 
 text:
-notification.message
+template.text,
+
+html:
+template.html
 
 });
 
@@ -194,9 +202,7 @@ catch(
 err
 ){
 
-console.log(
-err.message
-);
+logger.error("notification delivery failed", { error: err.message });
 
 }
 

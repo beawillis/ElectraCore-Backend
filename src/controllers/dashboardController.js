@@ -19,7 +19,7 @@ success:true,
 
 data:
 await service
-.getStats()
+.getStats(req.query)
 
 });
 

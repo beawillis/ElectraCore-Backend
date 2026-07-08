@@ -10,6 +10,12 @@ require("helmet");
 const morgan =
 require("morgan");
 
+const swaggerUi = require("swagger-ui-express");
+const swaggerJsdoc = require("swagger-jsdoc");
+const limiter = require("./middleware/rateLimiter");
+const logger = require("./utils/logger");
+const fs = require("fs");
+
 const mlRoutes =
 require(
 "./routes/mlRoutes"
@@ -44,17 +50,40 @@ require(
 const app =
 express();
 
+const swaggerSpec = swaggerJsdoc({
+  definition: {
+    openapi: "3.0.0",
+    info: {
+      title: "ElectraCore Backend API",
+      version: "1.0.0",
+      description: "API for transformer monitoring, device registration, and alerts"
+    }
+  },
+  apis: ["./src/routes/*.js", "./src/app.js"]
+});
+
 app.use(cors());
 
 app.use(helmet());
 
 app.use(
-morgan("dev")
+morgan("combined", {
+  stream: {
+    write: (message) => logger.info(message.trim())
+  }
+})
 );
 
-app.use(
-express.json()
-);
+app.use(limiter);
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+app.use((req, res, next) => {
+  logger.info("request", { method: req.method, url: req.originalUrl });
+  next();
+});
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /*
 Routes
