@@ -1,0 +1,1329 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "ElectraCore Backend API",
+    "version": "1.0.0",
+    "description": "REST API for the ElectraCore transformer-monitoring platform. Manages transformers, IoT devices, sensor readings, alerts, and ML-based anomaly scoring. Most endpoints require a JWT bearer token obtained from the auth endpoints. Some write operations are restricted to the `admin` role."
+  },
+  "servers": [
+    {
+      "url": "https://electracore-backend-13oa.onrender.com",
+      "description": "Production (Render)"
+    }
+  ],
+  "tags": [
+    {
+      "name": "System",
+      "description": "Service metadata and health checks"
+    },
+    {
+      "name": "Auth",
+      "description": "Registration and login (returns a JWT)"
+    },
+    {
+      "name": "Dashboard",
+      "description": "Aggregated statistics"
+    },
+    {
+      "name": "Transformers",
+      "description": "Transformer CRUD"
+    },
+    {
+      "name": "Devices",
+      "description": "IoT device management"
+    },
+    {
+      "name": "Alerts",
+      "description": "Anomaly and threshold alerts"
+    },
+    {
+      "name": "ML",
+      "description": "Machine-learning / anomaly-model status"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT returned by `/api/auth/register` or `/api/auth/login`."
+      }
+    },
+    "schemas": {
+      "SuccessEnvelope": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "ValidationError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "Validation failed"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "field": {
+                  "type": "string",
+                  "example": "email"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Invalid input: expected string, received undefined"
+                }
+              }
+            }
+          }
+        }
+      },
+      "AuthError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "example": "No token provided"
+          }
+        }
+      },
+      "ForbiddenError": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": false
+          },
+          "message": {
+            "type": "string",
+            "example": "You do not have permission to access this resource"
+          }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6a5500a6c5f9b41f9dd8381b"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Engineer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "engineer",
+              "admin"
+            ],
+            "example": "engineer"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Jane Engineer"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "Password123!"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "engineer",
+              "admin"
+            ],
+            "description": "Optional. Defaults to `engineer`.",
+            "example": "engineer"
+          }
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": [
+          "email",
+          "password"
+        ],
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "jane@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "Password123!"
+          }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string",
+            "example": "User registered successfully"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "user": {
+                "$ref": "#/components/schemas/User"
+              },
+              "token": {
+                "type": "string",
+                "description": "JWT bearer token"
+              }
+            }
+          }
+        }
+      },
+      "Transformer": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6a5500fec5f9b41f9dd8381e"
+          },
+          "transformerId": {
+            "type": "string",
+            "example": "TX-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Main Substation TX"
+          },
+          "location": {
+            "type": "string",
+            "example": "Grid A / Feeder 3"
+          },
+          "capacity": {
+            "type": "number",
+            "description": "Rated capacity (kVA).",
+            "example": 500
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "warning",
+              "critical"
+            ],
+            "example": "healthy"
+          },
+          "healthScore": {
+            "type": "number",
+            "example": 100
+          },
+          "installationDate": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "TransformerCreate": {
+        "type": "object",
+        "required": [
+          "transformerId",
+          "name",
+          "location",
+          "capacity"
+        ],
+        "properties": {
+          "transformerId": {
+            "type": "string",
+            "example": "TX-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Main Substation TX"
+          },
+          "location": {
+            "type": "string",
+            "example": "Grid A / Feeder 3"
+          },
+          "capacity": {
+            "type": "number",
+            "example": 500
+          }
+        }
+      },
+      "TransformerUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Main Substation TX"
+          },
+          "location": {
+            "type": "string",
+            "example": "Grid A / Feeder 3"
+          },
+          "capacity": {
+            "type": "number",
+            "example": 500
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "warning",
+              "critical"
+            ],
+            "example": "warning"
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6a5500ffc5f9b41f9dd8381f"
+          },
+          "deviceId": {
+            "type": "string",
+            "example": "DEV-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Oil Temp Sensor"
+          },
+          "deviceType": {
+            "type": "string",
+            "description": "Hardware type. Defaults to `esp32`.",
+            "example": "esp32"
+          },
+          "transformer": {
+            "type": "string",
+            "description": "ObjectId of the parent transformer.",
+            "example": "6a5500fec5f9b41f9dd8381e"
+          },
+          "firmwareVersion": {
+            "type": "string",
+            "example": "1.0.0"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "offline"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "DeviceCreate": {
+        "type": "object",
+        "required": [
+          "deviceId",
+          "name",
+          "transformer"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "example": "DEV-001"
+          },
+          "name": {
+            "type": "string",
+            "example": "Oil Temp Sensor"
+          },
+          "transformer": {
+            "type": "string",
+            "description": "ObjectId of the parent transformer.",
+            "example": "6a5500fec5f9b41f9dd8381e"
+          },
+          "deviceType": {
+            "type": "string",
+            "example": "esp32"
+          },
+          "firmwareVersion": {
+            "type": "string",
+            "example": "1.0.0"
+          }
+        }
+      },
+      "DeviceUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Oil Temp Sensor"
+          },
+          "firmwareVersion": {
+            "type": "string",
+            "example": "1.1.0"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline"
+            ],
+            "example": "online"
+          }
+        }
+      },
+      "Alert": {
+        "type": "object",
+        "properties": {
+          "_id": {
+            "type": "string",
+            "example": "6a5500ffc5f9b41f9dd83820"
+          },
+          "transformer": {
+            "type": "string",
+            "example": "6a5500fec5f9b41f9dd8381e"
+          },
+          "device": {
+            "type": "string",
+            "example": "6a5500ffc5f9b41f9dd8381f"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "info",
+              "warning",
+              "critical"
+            ],
+            "example": "warning"
+          },
+          "message": {
+            "type": "string",
+            "example": "Oil temperature above threshold"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "acknowledged",
+              "resolved"
+            ],
+            "example": "open"
+          },
+          "acknowledged": {
+            "type": "boolean",
+            "example": false
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Service metadata",
+        "description": "Returns service name, version, and a directory of top-level endpoints.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Service info",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "service": "ElectraCore Backend",
+                  "status": "running",
+                  "version": "1.0.0",
+                  "message": "ElectraCore Backend running",
+                  "endpoints": {
+                    "health": "/health",
+                    "api": "/api",
+                    "auth": "/api/auth",
+                    "dashboard": "/api/dashboard",
+                    "ml": "/api/ml/status"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Health check",
+        "description": "Liveness probe reporting uptime and a timestamp.",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Healthy",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "service": "ElectraCore Backend",
+                  "status": "healthy",
+                  "uptime": 4423.35,
+                  "timestamp": "2026-07-13T15:18:19.162Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Register a new user",
+        "description": "Creates a user account and returns a JWT. `role` is optional and defaults to `engineer`.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log in",
+        "description": "Authenticates with email + password and returns a JWT.",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Authenticated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/dashboard/stats": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Aggregated counts",
+        "description": "Returns counts of devices, transformers, and sensor readings. Optionally scoped by transformer or device.",
+        "parameters": [
+          {
+            "name": "transformerId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scope counts to a single transformer."
+          },
+          {
+            "name": "deviceId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Scope counts to a single device."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Statistics",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "data": {
+                    "devices": 1,
+                    "transformers": 1,
+                    "sensorReadings": 0,
+                    "scope": {
+                      "transformerId": null,
+                      "deviceId": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transformers": {
+      "get": {
+        "tags": [
+          "Transformers"
+        ],
+        "summary": "List transformers",
+        "description": "Returns a paginated list of transformers.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated transformers",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "count": 1,
+                  "page": 1,
+                  "limit": 10,
+                  "total": 1,
+                  "data": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Transformers"
+        ],
+        "summary": "Create a transformer",
+        "description": "Creates a transformer. **Requires the `admin` role.**",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransformerCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Transformer created successfully",
+                  "data": {
+                    "transformerId": "TX-001",
+                    "name": "Main Substation TX",
+                    "location": "Grid A / Feeder 3",
+                    "capacity": 500,
+                    "status": "healthy",
+                    "healthScore": 100,
+                    "_id": "6a5500fec5f9b41f9dd8381e",
+                    "installationDate": "2026-07-13T15:15:10.959Z"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/transformers/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Transformer ObjectId."
+        }
+      ],
+      "get": {
+        "tags": [
+          "Transformers"
+        ],
+        "summary": "Get a transformer",
+        "responses": {
+          "200": {
+            "description": "Transformer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Transformer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "500": {
+            "description": "Invalid ObjectId format"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Transformers"
+        ],
+        "summary": "Update a transformer",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TransformerUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated transformer",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Transformer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "500": {
+            "description": "Invalid ObjectId format"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Transformers"
+        ],
+        "summary": "Delete a transformer",
+        "description": "Deletes a transformer. **Requires the `admin` role.**",
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "403": {
+            "description": "Not an admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/devices": {
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "List devices",
+        "description": "Returns a paginated list of registered devices.",
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated devices",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "count": 1,
+                  "page": 1,
+                  "limit": 10,
+                  "total": 1,
+                  "data": []
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/devices/register": {
+      "post": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Register a device",
+        "description": "Registers a new IoT device against a transformer. **Requires the `admin` role.**",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Registered",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "message": "Device registered successfully",
+                  "data": {
+                    "deviceId": "DEV-001",
+                    "name": "Oil Temp Sensor",
+                    "deviceType": "esp32",
+                    "transformer": "6a5500fec5f9b41f9dd8381e",
+                    "firmwareVersion": "1.0.0",
+                    "status": "offline",
+                    "_id": "6a5500ffc5f9b41f9dd8381f"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Not an admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/devices/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "description": "Device ObjectId."
+        }
+      ],
+      "get": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Get a device",
+        "responses": {
+          "200": {
+            "description": "Device",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "500": {
+            "description": "Invalid ObjectId format"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Update a device",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeviceUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated device",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Device"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "500": {
+            "description": "Invalid ObjectId format"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Devices"
+        ],
+        "summary": "Delete a device",
+        "description": "Deletes a device. **Requires the `admin` role.**",
+        "responses": {
+          "200": {
+            "description": "Deleted"
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "403": {
+            "description": "Not an admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForbiddenError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts": {
+      "get": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "List alerts",
+        "description": "Returns alerts, optionally filtered by status.",
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "acknowledged",
+                "resolved"
+              ]
+            },
+            "description": "Filter by alert status."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Alerts",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Alert"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/alerts/{id}/acknowledge": {
+      "put": {
+        "tags": [
+          "Alerts"
+        ],
+        "summary": "Acknowledge an alert",
+        "description": "Marks an alert as acknowledged.",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Alert ObjectId."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Acknowledged",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/Alert"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token"
+          },
+          "500": {
+            "description": "Invalid ObjectId format"
+          }
+        }
+      }
+    },
+    "/api/ml/status": {
+      "get": {
+        "tags": [
+          "ML"
+        ],
+        "summary": "ML model status",
+        "description": "Reports the state of the anomaly-detection model (currently a baseline rule-based placeholder).",
+        "responses": {
+          "200": {
+            "description": "ML status",
+            "content": {
+              "application/json": {
+                "example": {
+                  "success": true,
+                  "data": {
+                    "mlEnabled": false,
+                    "modelType": "baseline_rules",
+                    "trainingStatus": "not_started",
+                    "minimumRecommendedReadings": 1000,
+                    "availableReadings": 0,
+                    "modelPath": "src/ml/models/anomaly_model.pkl",
+                    "datasetPath": "src/ml/datasets/sensor_history.csv",
+                    "nextStep": "Collect sensor history, export readings to CSV, train IsolationForest, then deploy anomaly_model.pkl.",
+                    "message": "ML placeholder is active. The backend is using baseline rule-based risk scoring until a trained model is available."
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing/invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

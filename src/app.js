@@ -13,7 +13,6 @@ require("morgan");
 
 // Swagger/OpenAPI tooling for API documentation UI
 const swaggerUi = require("swagger-ui-express");
-const swaggerJsdoc = require("swagger-jsdoc");
 const limiter = require("./middleware/rateLimiter");
 const logger = require("./utils/logger");
 const fs = require("fs");
@@ -55,17 +54,9 @@ const app =
 express();
 
 // Swagger spec configuration for API docs generation
-const swaggerSpec = swaggerJsdoc({
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "ElectraCore Backend API",
-      version: "1.0.0",
-      description: "API for transformer monitoring, device registration, and alerts"
-    }
-  },
-  apis: ["./src/routes/*.js", "./src/app.js"]
-});
+const swaggerSpec = JSON.parse(
+  fs.readFileSync(path.resolve(__dirname, "docs/openapi.json"), "utf8")
+);
 
 // Security and request middleware
 app.use(cors()); // allow cross-origin requests
@@ -89,18 +80,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve generated Swagger UI at both /api-docs and /api-doc
+// Serve generated Swagger UI at /api-docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
-// Serve the uploaded Swagger HTML file directly at /api-doc-custom
-const docsHtmlPath = path.resolve(__dirname, "../ElectraCore Backend API Docs.html");
-const docsAssetsDir = path.resolve(__dirname, "../ElectraCore Backend API Docs_files");
-if (fs.existsSync(docsAssetsDir)) {
-  app.use("/ElectraCore Backend API Docs_files", express.static(docsAssetsDir));
-}
-app.get("/api-doc-custom", (req, res) => {
-  res.sendFile(docsHtmlPath);
+// Redirect /api-doc to /api-docs for compatibility with older links
+app.get("/api-doc", (req, res) => {
+  res.redirect("/api-docs");
 });
 
 /*
