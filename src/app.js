@@ -17,7 +17,7 @@ const swaggerJsdoc = require("swagger-jsdoc");
 const limiter = require("./middleware/rateLimiter");
 const logger = require("./utils/logger");
 const fs = require("fs");
-
+const path = require("path");
 // Application route modules
 const mlRoutes =
 require(
@@ -92,6 +92,16 @@ app.use((req, res, next) => {
 // Serve generated Swagger UI at both /api-docs and /api-doc
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Serve the uploaded Swagger HTML file directly at /api-doc-custom
+const docsHtmlPath = path.resolve(__dirname, "../ElectraCore Backend API Docs.html");
+const docsAssetsDir = path.resolve(__dirname, "../ElectraCore Backend API Docs_files");
+if (fs.existsSync(docsAssetsDir)) {
+  app.use("/ElectraCore Backend API Docs_files", express.static(docsAssetsDir));
+}
+app.get("/api-doc-custom", (req, res) => {
+  res.sendFile(docsHtmlPath);
+});
 
 /*
 Routes
