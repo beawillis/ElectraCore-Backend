@@ -89,8 +89,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve generated Swagger UI at /api-docs
+// Serve generated Swagger UI at both /api-docs and /api-doc
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use("/api-doc", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /*
 Routes
