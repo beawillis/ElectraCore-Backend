@@ -33,15 +33,17 @@ require(
 require("dotenv")
 .config();
 
-// Boot order matters: connect storage, create HTTP/socket servers, then start
-// MQTT and scheduled jobs that depend on the app services.
+// Load environment variables and connect to the database first
+// so the rest of the app can use persistent storage safely.
 connectDB();
 
+// Create the HTTP server using the Express app instance
 const server =
 http.createServer(
 app
 );
 
+// Initialize Socket.IO and attach it to the HTTP server
 const io =
 initialize(
 server
@@ -82,10 +84,13 @@ socket
 
 );
 
+// Start MQTT subscription to ingest real-time device and sensor data.
 mqtt.start();
 
+// Start scheduled background jobs for cleanup, health checks, and notifications.
 scheduler.start();
 
+// Begin listening for HTTP traffic on the configured port.
 server.listen(
 
 process.env.PORT,

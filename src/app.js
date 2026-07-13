@@ -1,3 +1,4 @@
+// Core framework and middleware imports
 const express =
 require("express");
 
@@ -10,12 +11,14 @@ require("helmet");
 const morgan =
 require("morgan");
 
+// Swagger/OpenAPI tooling for API documentation UI
 const swaggerUi = require("swagger-ui-express");
 const swaggerJsdoc = require("swagger-jsdoc");
 const limiter = require("./middleware/rateLimiter");
 const logger = require("./utils/logger");
 const fs = require("fs");
 
+// Application route modules
 const mlRoutes =
 require(
 "./routes/mlRoutes"
@@ -47,9 +50,11 @@ require(
 "./middleware/errorHandler"
 );
 
+// Create the Express application instance
 const app =
 express();
 
+// Swagger spec configuration for API docs generation
 const swaggerSpec = swaggerJsdoc({
   definition: {
     openapi: "3.0.0",
@@ -62,10 +67,9 @@ const swaggerSpec = swaggerJsdoc({
   apis: ["./src/routes/*.js", "./src/app.js"]
 });
 
-app.use(cors());
-
-app.use(helmet());
-
+// Security and request middleware
+app.use(cors()); // allow cross-origin requests
+app.use(helmet()); // secure HTTP headers
 app.use(
 morgan("combined", {
   stream: {
@@ -74,21 +78,25 @@ morgan("combined", {
 })
 );
 
+// Limit request rate and body size
 app.use(limiter);
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
+// Simple request logger for all incoming traffic
 app.use((req, res, next) => {
   logger.info("request", { method: req.method, url: req.originalUrl });
   next();
 });
 
+// Serve generated Swagger UI at /api-docs
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 /*
 Routes
 */
 
+// Health and metadata endpoints for monitoring and quick checks
 app.get(
 "/",
 (
@@ -164,6 +172,7 @@ new Date().toISOString()
 }
 );
 
+// Mount API route modules under their respective base URLs
 app.use(
 "/api/ml",
 mlRoutes
@@ -199,6 +208,7 @@ app.use(
 alertRoutes
 );
 
+// Central error handler for any unhandled errors in routes/middleware
 app.use(
 errorHandler
 );
