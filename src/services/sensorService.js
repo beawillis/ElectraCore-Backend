@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const Sensor =
 require(
 "../models/sensorData"
@@ -7,6 +9,8 @@ const Device =
 require(
 "../models/Device"
 );
+
+const Transformer = require("../models/Transformer");
 
 const calculateHealth =
 require(
@@ -53,8 +57,33 @@ payload
 // A valid reading is treated as the device heartbeat.
 const deviceIdentifier = payload.device;
 
+let deviceRecord = null;
+
 if (deviceIdentifier) {
-  const deviceRecord = await Device.findOne({ deviceId: deviceIdentifier });
+  deviceRecord = await Device.findOne({ deviceId: deviceIdentifier });
+
+  if (!deviceRecord) {
+    let transformerRecord = await Transformer.findOne({ transformerId: payload.transformer || "default-transformer" });
+
+    if (!transformerRecord) {
+      transformerRecord = await Transformer.create({
+        transformerId: "default-transformer",
+        name: "Default Transformer",
+        location: "Auto Registered",
+        capacity: 100
+      });
+    }
+
+    deviceRecord = await Device.create({
+      deviceId: deviceIdentifier,
+      name: `Device ${deviceIdentifier}`,
+      deviceType: "esp32",
+      transformer: transformerRecord._id,
+      firmwareVersion: "1.1.0",
+      status: "connected",
+      lastSeen: new Date()
+    });
+  }
 
   if (deviceRecord) {
     await Device.findByIdAndUpdate(
@@ -66,6 +95,14 @@ if (deviceIdentifier) {
     );
 
     payload.device = deviceRecord._id;
+  }
+}
+
+if (payload.device && typeof payload.device === "string") {
+  try {
+    payload.device = new mongoose.Types.ObjectId(payload.device);
+  } catch (error) {
+    payload.device = undefined;
   }
 }
 

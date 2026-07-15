@@ -4,3 +4,7 @@
 {"level":"info","message":"::ffff:127.0.0.1 - - [15/Jul/2026:17:14:35 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-15T17:14:35.405Z"}
 {"level":"info","message":"request","method":"POST","timestamp":"2026-07-15T17:50:34.648Z","url":"/api/v1/device/telemetry"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [15/Jul/2026:17:50:34 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-15T17:50:34.657Z"}
+{"level":"info","message":"request","method":"POST","timestamp":"2026-07-15T17:57:04.020Z","url":"/api/v1/device/telemetry"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [15/Jul/2026:17:57:04 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-15T17:57:04.035Z"}
+{"level":"info","message":"request","method":"POST","timestamp":"2026-07-15T17:59:10.101Z","url":"/api/v1/device/telemetry"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [15/Jul/2026:17:59:10 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-15T17:59:10.106Z"}
