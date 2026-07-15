@@ -36,6 +36,17 @@ test("rejects device registration payloads without a transformer reference", () 
   assert.ok(result.errors.some((error) => error.field === "transformer"));
 });
 
+test("accepts device registration data using transformerId", () => {
+  const result = validateDeviceInput({
+    deviceId: "DEV-200",
+    name: "Node 1",
+    transformerId: "TR-100"
+  });
+
+  assert.equal(result.isValid, true);
+  assert.deepEqual(result.errors, []);
+});
+
 test("builds professional email templates for password reset and alerts", () => {
   const reset = passwordResetTemplate("https://example.com/reset");
   const alert = alertTemplate("High temperature", "Transformer 1 exceeded threshold");
