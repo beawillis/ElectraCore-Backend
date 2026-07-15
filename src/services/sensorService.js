@@ -37,6 +37,11 @@ require(
 "../mqtt/mqttPublisher"
 );
 
+const socketService =
+require(
+"./socketService"
+);
+
 exports.ingest =
 async (
 payload
@@ -111,6 +116,25 @@ await Sensor
 .create(
 payload
 );
+
+if (saved.transformer) {
+  socketService.emitToRoom(
+    saved.transformer.toString(),
+    "sensor_reading",
+    {
+      device: saved.device,
+      transformer: saved.transformer,
+      oilTemperature: saved.oilTemperature,
+      ambientTemperature: saved.ambientTemperature,
+      voltage: saved.voltage,
+      current: saved.current,
+      humidity: saved.humidity,
+      oilLevel: saved.oilLevel,
+      healthScore: saved.healthScore,
+      recordedAt: saved.recordedAt
+    }
+  );
+}
 
 const alerts =
 rules(
