@@ -32,6 +32,9 @@ require("./routes/authRoutes");
 const deviceRoutes =
 require("./routes/deviceRoutes");
 
+const sensorController =
+require("./controllers/sensorController");
+
 const transformerRoutes =
 require("./routes/transformerRoutes");
 
@@ -177,6 +180,11 @@ mlRoutes
 app.use(
 "/api/auth",
 authRoutes
+);
+
+app.post(
+"/api/v1/device/telemetry",
+sensorController.ingest
 );
 
 app.use(

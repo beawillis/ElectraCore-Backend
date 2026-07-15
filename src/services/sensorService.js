@@ -51,13 +51,23 @@ payload
 );
 
 // A valid reading is treated as the device heartbeat.
-await Device.findByIdAndUpdate(
-payload.device,
-{
-status:"connected",
-lastSeen:new Date()
+const deviceIdentifier = payload.device;
+
+if (deviceIdentifier) {
+  const deviceRecord = await Device.findOne({ deviceId: deviceIdentifier });
+
+  if (deviceRecord) {
+    await Device.findByIdAndUpdate(
+      deviceRecord._id,
+      {
+        status: "connected",
+        lastSeen: new Date()
+      }
+    );
+
+    payload.device = deviceRecord._id;
+  }
 }
-);
 
 const saved =
 await Sensor

@@ -1,5 +1,6 @@
 const numericFields = [
   "oilTemperature",
+  "transformerTemperature",
   "ambientTemperature",
   "voltage",
   "current",
@@ -45,6 +46,18 @@ exports.validateAndNormalize = (payload) => {
     data.oilTemperature = data.temperature;
   }
 
+  if (data.oilTemperature === undefined && data.transformerTemperature !== undefined) {
+    data.oilTemperature = data.transformerTemperature;
+  }
+
+  if (data.device === undefined && data.deviceId !== undefined) {
+    data.device = data.deviceId;
+  }
+
+  if (data.transformer === undefined && data.transformerId !== undefined) {
+    data.transformer = data.transformerId;
+  }
+
   if (!data.transformer) errors.push("transformer is required");
   if (!data.device) errors.push("device is required");
 
@@ -82,5 +95,8 @@ exports.validateAndNormalize = (payload) => {
   }
 
   delete data.temperature;
+  delete data.transformerTemperature;
+  delete data.deviceId;
+  delete data.transformerId;
   return data;
 };
