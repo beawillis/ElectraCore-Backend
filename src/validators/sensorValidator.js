@@ -72,8 +72,10 @@ exports.validateAndNormalize = (payload) => {
       continue;
     }
 
-    if (value < range.min || value > range.max) {
-      errors.push(`${field} is outside the expected range`);
+    if (range) {
+      if (value < range.min || value > range.max) {
+        errors.push(`${field} is outside the expected range`);
+      }
     }
 
     data[field] = value;

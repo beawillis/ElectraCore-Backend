@@ -54,3 +54,25 @@ test("calculates lower health for unsafe readings", () => {
 
   assert.equal(score, 0);
 });
+
+test("accepts firmware telemetry fields without crashing", () => {
+  const payload = validateAndNormalize({
+    deviceId: "EC001",
+    transformerId: "507f1f77bcf86cd799439011",
+    timestamp: "2000-01-01 00:00:00",
+    transformerTemperature: 35.16,
+    ambientTemperature: 28,
+    humidity: 54,
+    voltage: 0.08,
+    current: 8.95,
+    oilLevel: "high",
+    healthScore: 73,
+    condition: "WARNING",
+    recommendation: "High Current"
+  });
+
+  assert.equal(payload.oilTemperature, 35.16);
+  assert.equal(payload.device, "EC001");
+  assert.equal(payload.transformer, "507f1f77bcf86cd799439011");
+  assert.equal(payload.oilLevel, "high");
+});
