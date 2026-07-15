@@ -17,12 +17,18 @@ try{
 
 const validation = validateDeviceInput(req.body);
 if (!validation.isValid) {
-  return res.status(400).json({ success: false, message: "Validation failed", errors: validation.errors });
+  return res.status(400).json({ success: false, message: "Device validation failed", errors: validation.errors });
+}
+
+const payload = { ...req.body };
+
+if (!payload.transformer && payload.transformerId) {
+  payload.transformer = payload.transformerId;
 }
 
 const data =
 await service.create(
-req.body
+payload
 );
 
 res
@@ -41,7 +47,6 @@ next(err);
 }
 
 };
-
 //  get all devices
 exports.getDevices =
 async (
