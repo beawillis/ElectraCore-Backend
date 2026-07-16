@@ -281,6 +281,30 @@ recordedAt:-1
 
 };
 
+exports.getLatestByTransformer =
+async (
+id
+)=>{
+
+return await Sensor
+.findOne({
+
+transformer:id
+
+})
+
+.populate(
+"transformer device"
+)
+
+.sort({
+
+recordedAt:-1
+
+});
+
+};
+
 /*
 Get readings
 for one device

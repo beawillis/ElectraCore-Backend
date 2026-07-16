@@ -216,3 +216,5 @@
 {"error":"The electracore.com domain is not verified. Please, add and verify your domain on https://resend.com/domains","level":"error","message":"notification delivery failed","timestamp":"2026-07-15T20:47:08.904Z"}
 {"level":"info","message":"request","method":"POST","timestamp":"2026-07-16T14:36:27.354Z","url":"/api/v1/device/telemetry"}
 {"level":"info","message":"::ffff:127.0.0.1 - - [16/Jul/2026:14:36:27 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-16T14:36:27.373Z"}
+{"level":"info","message":"request","method":"POST","timestamp":"2026-07-16T15:23:43.188Z","url":"/api/v1/device/telemetry"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [16/Jul/2026:15:23:43 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-16T15:23:43.204Z"}

@@ -36,5 +36,11 @@ auth,
 controller.getTransformerData
 );
 
+router.get(
+"/transformer/:id/live",
+auth,
+controller.getTransformerLiveData
+);
+
 module.exports =
 router;

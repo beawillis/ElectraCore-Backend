@@ -110,3 +110,36 @@ next(err);
 }
 
 };
+
+exports.getTransformerLiveData =
+async (
+req,
+res,
+next
+)=>{
+
+try{
+
+const data =
+await service
+.getLatestByTransformer(
+req.params.id
+);
+
+res.json({
+
+success:true,
+
+data
+
+});
+
+}
+
+catch(err){
+
+next(err);
+
+}
+
+};
