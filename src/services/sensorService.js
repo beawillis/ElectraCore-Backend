@@ -42,6 +42,36 @@ require(
 "./socketService"
 );
 
+const { getTransformerRoomNames } = require("../utils/transformerRoom");
+
+const resolveTransformerReference = async (transformerIdentifier) => {
+  const normalizedIdentifier =
+    transformerIdentifier && typeof transformerIdentifier === "string"
+      ? transformerIdentifier.trim()
+      : transformerIdentifier;
+
+  const fallbackIdentifier = normalizedIdentifier || "default-transformer";
+
+  let transformerRecord = null;
+
+  if (normalizedIdentifier && mongoose.Types.ObjectId.isValid(normalizedIdentifier)) {
+    transformerRecord = await Transformer.findById(normalizedIdentifier);
+  } else {
+    transformerRecord = await Transformer.findOne({ transformerId: fallbackIdentifier });
+  }
+
+  if (!transformerRecord) {
+    transformerRecord = await Transformer.create({
+      transformerId: fallbackIdentifier,
+      name: fallbackIdentifier === "default-transformer" ? "Default Transformer" : fallbackIdentifier,
+      location: "Auto Registered",
+      capacity: 100
+    });
+  }
+
+  return transformerRecord;
+};
+
 exports.ingest =
 async (
 payload
@@ -59,6 +89,13 @@ calculateHealth(
 payload
 );
 
+const transformerRecord = await resolveTransformerReference(
+  payload.transformer || payload.transformerId || "default-transformer"
+);
+
+payload.transformer = transformerRecord._id;
+payload.transformerDetails = transformerRecord;
+
 // A valid reading is treated as the device heartbeat.
 const deviceIdentifier = payload.device;
 
@@ -68,17 +105,6 @@ if (deviceIdentifier) {
   deviceRecord = await Device.findOne({ deviceId: deviceIdentifier });
 
   if (!deviceRecord) {
-    let transformerRecord = await Transformer.findOne({ transformerId: payload.transformer || "default-transformer" });
-
-    if (!transformerRecord) {
-      transformerRecord = await Transformer.create({
-        transformerId: "default-transformer",
-        name: "Default Transformer",
-        location: "Auto Registered",
-        capacity: 100
-      });
-    }
-
     deviceRecord = await Device.create({
       deviceId: deviceIdentifier,
       name: `Device ${deviceIdentifier}`,
@@ -118,12 +144,13 @@ payload
 );
 
 if (saved.transformer) {
-  socketService.emitToRoom(
-    saved.transformer.toString(),
-    "sensor_reading",
-    {
+  const transformerRooms = getTransformerRoomNames(payload.transformerDetails || saved.transformer);
+
+  if (transformerRooms.length) {
+    const payloadToEmit = {
       device: saved.device,
       transformer: saved.transformer,
+      transformerId: payload.transformerDetails?.transformerId || payload.transformerId,
       oilTemperature: saved.oilTemperature,
       ambientTemperature: saved.ambientTemperature,
       voltage: saved.voltage,
@@ -132,8 +159,12 @@ if (saved.transformer) {
       oilLevel: saved.oilLevel,
       healthScore: saved.healthScore,
       recordedAt: saved.recordedAt
+    };
+
+    for (const room of transformerRooms) {
+      socketService.emitToRoom(room, "sensor_reading", payloadToEmit);
     }
-  );
+  }
 }
 
 const alerts =
