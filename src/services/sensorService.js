@@ -44,7 +44,7 @@ require(
 
 const { getTransformerRoomNames } = require("../utils/transformerRoom");
 
-const resolveTransformerReference = async (transformerIdentifier) => {
+exports.resolveTransformerReference = async (transformerIdentifier) => {
   const normalizedIdentifier =
     transformerIdentifier && typeof transformerIdentifier === "string"
       ? transformerIdentifier.trim()
@@ -54,8 +54,15 @@ const resolveTransformerReference = async (transformerIdentifier) => {
 
   let transformerRecord = null;
 
-  if (normalizedIdentifier && mongoose.Types.ObjectId.isValid(normalizedIdentifier)) {
-    transformerRecord = await Transformer.findById(normalizedIdentifier);
+  if (normalizedIdentifier) {
+    const query = {
+      $or: [
+        { _id: normalizedIdentifier },
+        { transformerId: normalizedIdentifier }
+      ]
+    };
+
+    transformerRecord = await Transformer.findOne(query);
   } else {
     transformerRecord = await Transformer.findOne({ transformerId: fallbackIdentifier });
   }
@@ -89,12 +96,13 @@ calculateHealth(
 payload
 );
 
-const transformerRecord = await resolveTransformerReference(
+const transformerRecord = await exports.resolveTransformerReference(
   payload.transformer || payload.transformerId || "default-transformer"
 );
 
 payload.transformer = transformerRecord._id;
 payload.transformerDetails = transformerRecord;
+payload.transformerId = transformerRecord.transformerId;
 
 // A valid reading is treated as the device heartbeat.
 const deviceIdentifier = payload.device;

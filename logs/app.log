@@ -282,3 +282,5 @@
 {"error":"The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains","level":"error","message":"notification delivery failed","timestamp":"2026-07-17T08:22:10.462Z"}
 {"error":"The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains","level":"error","message":"notification delivery failed","timestamp":"2026-07-17T08:22:10.935Z"}
 {"error":"The gmail.com domain is not verified. Please, add and verify your domain on https://resend.com/domains","level":"error","message":"notification delivery failed","timestamp":"2026-07-17T08:22:11.472Z"}
+{"level":"info","message":"request","method":"POST","timestamp":"2026-07-17T09:38:20.907Z","url":"/api/v1/device/telemetry"}
+{"level":"info","message":"::ffff:127.0.0.1 - - [17/Jul/2026:09:38:20 +0000] \"POST /api/v1/device/telemetry HTTP/1.1\" 201 210 \"-\" \"node\"","timestamp":"2026-07-17T09:38:20.914Z"}
