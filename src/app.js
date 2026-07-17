@@ -47,6 +47,9 @@ require("./routes/dashboardRoutes");
 const alertRoutes =
 require("./routes/alertRoutes");
 
+const reportsRoutes =
+require("./routes/reportsRoutes");
+
 const errorHandler =
 require(
 "./middleware/errorHandler"
@@ -210,6 +213,16 @@ dashboardRoutes
 app.use(
 "/api/alerts",
 alertRoutes
+);
+
+app.use(
+"/reports",
+reportsRoutes
+);
+
+app.use(
+"/api/reports",
+reportsRoutes
 );
 
 // Central error handler for any unhandled errors in routes/middleware
